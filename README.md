@@ -1,73 +1,92 @@
-# FEAT_HMI
-ATP Projektarbeit
--------------------------------------
-Android (local Python) integration
+@rem
+@rem Copyright 2015 the original author or authors.
+@rem
+@rem Licensed under the Apache License, Version 2.0 (the "License");
+@rem you may not use this file except in compliance with the License.
+@rem You may obtain a copy of the License at
+@rem
+@rem      https://www.apache.org/licenses/LICENSE-2.0
+@rem
+@rem Unless required by applicable law or agreed to in writing, software
+@rem distributed under the License is distributed on an "AS IS" BASIS,
+@rem WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+@rem See the License for the specific language governing permissions and
+@rem limitations under the License.
+@rem
 
-This branch embeds the Python backend inside the Android app using Chaquopy:
-- Python sources live in `app/src/main/python`.
-- The Kotlin app calls `backend.py` via `PythonBackendRepository`.
-- Images are passed as base64 strings to Python.
+@if "%DEBUG%"=="" @echo off
+@rem ##########################################################################
+@rem
+@rem  Gradle startup script for Windows
+@rem
+@rem ##########################################################################
 
-Note: OG_FEAT head fine-tuning uses PyTorch (`og_feat_trainer.py` + `og_feat_utils.py`).
-PyTorch is not bundled for Android in this setup, so training will fail unless a
-mobile-compatible model path is added.
+@rem Set local scope for the variables with windows NT shell
+if "%OS%"=="Windows_NT" setlocal
 
--------------------------------------
-Run backend locally on Linux:
+set DIRNAME=%~dp0
+if "%DIRNAME%"=="" set DIRNAME=.
+@rem This is normally unused
+set APP_BASE_NAME=%~n0
+set APP_HOME=%DIRNAME%
 
-1) Clone the repo and enter it:
-   git clone <repo_url>
-   cd Werkzeugerkennung
+@rem Resolve any "." and ".." in APP_HOME to make it shorter.
+for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
 
-2) Install the backend dependencies:
-   ./scripts/install_linux.sh
+@rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+set DEFAULT_JVM_OPTS=-Dfile.encoding=UTF-8 "-Xmx64m" "-Xms64m"
 
-3) Run the backend server:
-   ./scripts/run_backend_linux.sh
+@rem Find java.exe
+if defined JAVA_HOME goto findJavaFromJavaHome
 
-The script prints the LAN URL and a healthcheck URL. Your Mac and the tablet must be on the
-same Wi-Fi, and the machine must stay awake.
+set JAVA_EXE=java.exe
+%JAVA_EXE% -version >NUL 2>&1
+if %ERRORLEVEL% equ 0 goto execute
 
-Data is stored in ~/WerkzeugerkennungData by default. You can override this in backend/.env
-via DATA_DIR.
+echo.
+echo ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+echo.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation.
 
-API key (optional): set API_KEY and REQUIRE_API_KEY=true in backend/.env to require the
-X-API-Key header for non-read endpoints.
-Then enter the same API key in the Android app's Backend section.
+goto fail
 
-Android app backend URL:
-- On the Session screen, set "Backend base URL" to the server URL printed by the script.
-- Default emulator URL is http://10.0.2.2:8000.
+:findJavaFromJavaHome
+set JAVA_HOME=%JAVA_HOME:"=%
+set JAVA_EXE=%JAVA_HOME%/bin/java.exe
 
-In case the app fails to connect to the server, open the terminal in Android Studio
-and use the command: adb reverse tcp:8000 tcp:8000 to route the backend to https://0.0.0.0:8000
+if exist "%JAVA_EXE%" goto execute
 
-Phase 2 (Inference / In-the-Wild):
-- Use "Start Inference" on the Session screen (requires a remote backend URL).
-- Before the first inference, choose Semi-Automatic or Full-Automatic.
-- Semi-Automatic: every accepted prediction prompts for confirmation and saves as env_code=PostTraining.
-- Full-Automatic: accepted predictions auto-save to env_code=PostTraining; low-confidence still asks for correction.
-- Unknown rejection uses decision thresholds:
-  - T_CONF: minimum confidence to accept (default 0.8)
-  - T_MARGIN: minimum gap between top-1 and top-2 (default 0.1; 0 disables)
+echo.
+echo ERROR: JAVA_HOME is set to an invalid directory: %JAVA_HOME%
+echo.
+echo Please set the JAVA_HOME variable in your environment to match the
+echo location of your Java installation.
 
-OG_FEAT backbone + head:
-- Default pretrained weights are loaded from `OG_FEAT/saves/initialization/tieredimagenet/feat-5-shot.pth`.
-- Override weight path with `OG_FEAT_INIT_WEIGHTS`.
-- The `feat-5-shot.pth` file is not tracked in Git; the backend loads it from the local path in `backend/.env`.
-   The file can be found at: https://github.com/Sha-Lab/FEAT.git
-- If `OG_FEAT_INIT_WEIGHTS` is an absolute path, update it per machine.
-- Override OG_FEAT root with `OG_FEAT_ROOT`.
-- Class ID mapping is persisted in `training/class_map.json` (name -> id).
-- Head fine-tuning settings:
-  - OG_FEAT_HEAD_EPOCHS (default 50)
-  - OG_FEAT_HEAD_LR (default 1e-3)
-  - OG_FEAT_HEAD_BALANCE (default 0.0)
-- Optional preprocessing overrides:
-  - OG_FEAT_IMAGE_SIZE (default 84)
-  - OG_FEAT_TEMPERATURE / OG_FEAT_TEMPERATURE2 (default 1.0 / 1.0)
+goto fail
 
-Troubleshooting:
-- Firewall: allow incoming connections for Python/uvicorn if prompted.
-- LAN IP: use `ipconfig getifaddr en0` (or en1) if the script prints 127.0.0.1.
-- Port conflicts: change BACKEND_PORT in backend/.env and restart.
+:execute
+@rem Setup the command line
+
+set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar;%APP_HOME%\gradle\wrapper\gradle-wrapper-shared.jar
+
+
+@rem Execute Gradle
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+
+:end
+@rem End local scope for the variables with windows NT shell
+if %ERRORLEVEL% equ 0 goto mainEnd
+
+:fail
+rem Set variable GRADLE_EXIT_CONSOLE if you need the _script_ return code instead of
+rem the _cmd.exe /c_ return code!
+set EXIT_CODE=%ERRORLEVEL%
+if %EXIT_CODE% equ 0 set EXIT_CODE=1
+if not ""=="%GRADLE_EXIT_CONSOLE%" exit %EXIT_CODE%
+exit /b %EXIT_CODE%
+
+:mainEnd
+if "%OS%"=="Windows_NT" endlocal
+
+:omega

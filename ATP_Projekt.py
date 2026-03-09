@@ -1,0 +1,11 @@
+Token.env
+__pycache__/
+*.pyc
+.DS_Store
+.gradle/
+build/
+**/build/
+backend/.env
+backend/.venv/
+backend/__pycache__/
+OG_FEAT/saves/initialization/

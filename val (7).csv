@@ -1,0 +1,12 @@
+BACKEND_HOST=0.0.0.0
+BACKEND_PORT=8000
+DATA_DIR=~/WerkzeugerkennungData
+# Leave empty for no auth. Set REQUIRE_API_KEY=true to enforce.
+API_KEY=
+REQUIRE_API_KEY=false
+T_CONF=0.8
+T_MARGIN=0.2
+# Resize FEAT inputs (pixels). Set to 0 to disable.
+FEAT_IMAGE_SIZE=224
+# Allow automatic full FEAT training if the model is missing.
+AUTO_TRAIN_FEAT=true
